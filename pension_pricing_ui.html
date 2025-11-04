@@ -1,0 +1,3238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>펜션플러스 다중 객실 요금 설정</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+        }
+
+        .main-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 4px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            width: fit-content;
+        }
+
+        .main-tab {
+            padding: 10px 24px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .main-tab.active {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        /* 객실 그룹 관리 */
+        .room-groups {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .room-group-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid #4CAF50;
+        }
+
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .group-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .group-rooms {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .group-prices {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .price-item {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .price-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .price-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .exceptions {
+            background: #fff3e0;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* 테이블 뷰 */
+        .view-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .sub-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 4px;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+
+        .sub-tab {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .sub-tab.active {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .table-wrapper {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: auto;
+            max-height: 600px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            background: #f5f5f5;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            border: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table td {
+            padding: 10px 8px;
+            border: 1px solid #f0f0f0;
+            text-align: center;
+        }
+
+        .data-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .data-table .row-header {
+            background: #f9f9f9;
+            font-weight: 600;
+            text-align: left;
+            position: sticky;
+            left: 0;
+            z-index: 5;
+        }
+
+        .price-cell {
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .price-cell:hover {
+            background: #e8f5e9;
+        }
+
+        .price-cell.selected {
+            background: #c8e6c9;
+            box-shadow: inset 0 0 0 2px #4CAF50;
+        }
+
+        .price-cell.manual {
+            background: #fff3e0;
+        }
+
+        .price-cell.sold-out {
+            background: #f5f5f5 !important;
+            color: #999;
+            text-decoration: line-through;
+            position: relative;
+        }
+        .price-cell.sold-out::after {
+            content: '매진';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #f44336;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .price-cell.season {
+            background: #e3f2fd;
+        }
+
+        .price-cell.group-exception {
+            background: #fce4ec;
+        }
+
+        .cell-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 10px;
+        }
+
+
+        /* 인라인 편집 */
+        .inline-edit-bar {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .inline-edit-bar.show {
+            display: flex;
+        }
+
+        .inline-edit-bar input {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            width: 100px;
+        }
+
+        /* 멀티 캘린더 */
+        .multi-calendar {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 15px;
+        }
+
+        .calendar-header-cell {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px;
+            background: #f5f5f5;
+        }
+
+        .room-label {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 8px;
+            background: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar-cell {
+            padding: 6px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .calendar-cell:hover {
+            border-color: #4CAF50;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+        }
+
+        .calendar-cell.sold-out {
+            background: #f5f5f5 !important;
+            color: #999;
+            text-decoration: line-through;
+            position: relative;
+        }
+        .calendar-cell.sold-out::before {
+            content: '매진';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #f44336;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 600;
+        }
+
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .price-table th,
+        .price-table td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        .price-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .price-table input {
+            width: 90px;
+            padding: 6px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            text-align: right;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        /* 요금 전체보기 스타일 */
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .cal-header {
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .cal-cell {
+            min-height: 110px;
+            border-right: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cal-cell.empty { background: #fafafa; }
+        .cal-cell:hover:not(.empty) { background: #f0f8ff; }
+        .cal-cell.weekend-sat { background: #f0f8ff; }
+        .cal-cell.weekend-sun { background: #fff9f9; }
+        .cal-cell.manual { background: #fff3e0; }
+        .cal-cell.sold-out {
+            background: #f5f5f5;
+            opacity: 0.6;
+            position: relative;
+        }
+        .cal-cell.sold-out::after {
+            content: '매진';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #f44336;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .date-num { font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+        .date-label { font-size: 11px; color: #666; margin-bottom: 6px; }
+        .price-badge {
+            background: #e8f5e9;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        .control-bar {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 펜션플러스 다중 객실 요금 설정</h1>
+            <div class="main-tabs">
+                <button class="main-tab active" onclick="switchMainTab('current')">💰 요금 전체보기</button>
+                <button class="main-tab" onclick="switchMainTab('overview')">📋 요금 개요</button>
+                <button class="main-tab" onclick="switchMainTab('groups')">🏠 객실 그룹</button>
+                <button class="main-tab" onclick="switchMainTab('season')">🌸 시즌 설정</button>
+                <button class="main-tab" onclick="switchMainTab('calendar')">📅 캘린더</button>
+                <button class="main-tab" onclick="switchMainTab('table')">📊 테이블</button>
+                <button class="main-tab" onclick="switchMainTab('bulk')">✏️ 대량수정</button>
+            </div>
+        </div>
+
+        <!-- 요금 개요 -->
+        <div id="overviewView" class="content-section">
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+                <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">📋 전체 요금 정책 개요</h2>
+                
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4CAF50;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">💡 요금 적용 규칙</div>
+                    <div style="font-size: 13px; color: #666; line-height: 1.6;">
+                        1️⃣ 수동 설정된 날짜 → 최우선 적용<br>
+                        2️⃣ 시즌 기간 내 날짜 → 시즌 요금 적용 (우선순위: 높음 > 중 > 낮음)<br>
+                        3️⃣ 그 외 모든 날짜 → 기본 요금 적용
+                    </div>
+                </div>
+
+                <!-- 연간 타임라인 -->
+                <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">📅 2024년 연간 시즌 타임라인</h3>
+                    <div style="position: relative; height: 60px; background: linear-gradient(to right, #e8f5e9 0%, #e8f5e9 100%); border-radius: 4px; overflow: hidden;">
+                        <!-- 기본 요금 (연중) -->
+                        <div style="position: absolute; top: 0; left: 0; right: 0; height: 100%; display: flex; align-items: center; justify-content: center; color: #2e7d32; font-weight: 600; font-size: 12px;">
+                            기본 요금 (평시)
+                        </div>
+                        
+                        <!-- 봄 준성수기 -->
+                        <div style="position: absolute; top: 0; left: 25%; width: 16.7%; height: 100%; background: #fff3e0; border-left: 2px solid #ef6c00; border-right: 2px solid #ef6c00; display: flex; align-items: center; justify-content: center;">
+                            <div style="font-size: 11px; font-weight: 600; color: #ef6c00;">봄 준성수기<br>4/1~5/31</div>
+                        </div>
+                        
+                        <!-- 여름 성수기 -->
+                        <div style="position: absolute; top: 0; left: 55%; width: 7.4%; height: 100%; background: #ffebee; border-left: 2px solid #c62828; border-right: 2px solid #c62828; display: flex; align-items: center; justify-content: center;">
+                            <div style="font-size: 11px; font-weight: 600; color: #c62828;">여름<br>성수기</div>
+                        </div>
+                        
+                        <!-- 겨울 비수기 -->
+                        <div style="position: absolute; top: 0; left: 91.7%; width: 8.3%; height: 100%; background: #e3f2fd; border-left: 2px solid #1976d2; display: flex; align-items: center; justify-content: center;">
+                            <div style="font-size: 10px; font-weight: 600; color: #1976d2;">겨울<br>비수기</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #999;">
+                        <span>1월</span>
+                        <span>2월</span>
+                        <span>3월</span>
+                        <span>4월</span>
+                        <span>5월</span>
+                        <span>6월</span>
+                        <span>7월</span>
+                        <span>8월</span>
+                        <span>9월</span>
+                        <span>10월</span>
+                        <span>11월</span>
+                        <span>12월</span>
+                    </div>
+                </div>
+
+                <!-- 객실 타입 요약 -->
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">💰 객실 타입 요약 (20개 객실)</h3>
+
+                <!-- 채널 필터 -->
+                <div style="background: #f5f5f5; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 20px;">
+                    <div style="font-weight: 600; font-size: 14px;">💰 표시할 채널:</div>
+                    <label style="cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                        <input type="checkbox" checked style="width: 16px; height: 16px;">
+                        <span>🏠 예약창 요금</span>
+                    </label>
+                    <label style="cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                        <input type="checkbox" checked style="width: 16px; height: 16px;">
+                        <span>🌐 온라인채널 요금</span>
+                    </label>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">평일 최저가</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #4CAF50;">🏠 90K / 🌐 80K</div>
+                        <div style="font-size: 11px; color: #999; margin-top: 2px;">106호 스탠다드</div>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">평일 최고가</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #f44336;">🏠 350K / 🌐 320K</div>
+                        <div style="font-size: 11px; color: #999; margin-top: 2px;">210호 펜트하우스</div>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">주말 평균가</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #2196F3;">🏠 285K / 🌐 260K</div>
+                        <div style="font-size: 11px; color: #999; margin-top: 2px;">20개 객실 평균</div>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 5px;">평일 평균가</div>
+                        <div style="font-size: 18px; font-weight: 600;">🏠 180K / 🌐 160K</div>
+                        <div style="font-size: 11px; color: #999; margin-top: 2px;">20개 객실 평균</div>
+                    </div>
+                </div>
+
+                <!-- 객실 그룹별 요금 비교 -->
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">💰 대표 객실 요금 비교 (샘플)</h3>
+                <div style="overflow-x: auto;">
+                    <table class="data-table" style="min-width: 1000px;">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="min-width: 120px;">객실 그룹</th>
+                                <th rowspan="2">요일</th>
+                                <th colspan="4">기본 요금 (평시)</th>
+                                <th colspan="4">봄 준성수기</th>
+                                <th colspan="4">여름 성수기</th>
+                                <th colspan="4">겨울 비수기</th>
+                            </tr>
+                            <tr>
+                                <th>기본</th>
+                                <th>영</th>
+                                <th>아</th>
+                                <th>성</th>
+                                <th>기본</th>
+                                <th>영</th>
+                                <th>아</th>
+                                <th>성</th>
+                                <th>기본</th>
+                                <th>영</th>
+                                <th>아</th>
+                                <th>성</th>
+                                <th>기본</th>
+                                <th>영</th>
+                                <th>아</th>
+                                <th>성</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Deluxe 그룹 -->
+                            <tr style="background: #f9fdf9;">
+                                <td rowspan="4" class="row-header" style="background: #e8f5e9; font-weight: 600;">🏡 101호<br>(디럭스)</td>
+                                <td class="row-header">월~목</td>
+                                <td>120K</td>
+                                <td>0</td>
+                                <td>15K</td>
+                                <td>20K</td>
+                                <td style="background: #fff9e6;">150K</td>
+                                <td style="background: #fff9e6;">0</td>
+                                <td style="background: #fff9e6;">18K</td>
+                                <td style="background: #fff9e6;">23K</td>
+                                <td style="background: #ffe6e6;">250K</td>
+                                <td style="background: #ffe6e6;">0</td>
+                                <td style="background: #ffe6e6;">25K</td>
+                                <td style="background: #ffe6e6;">30K</td>
+                                <td style="background: #e6f2ff;">100K</td>
+                                <td style="background: #e6f2ff;">0</td>
+                                <td style="background: #e6f2ff;">15K</td>
+                                <td style="background: #e6f2ff;">20K</td>
+                            </tr>
+                            <tr style="background: #f9fdf9;">
+                                <td class="row-header">금</td>
+                                <td>160K</td>
+                                <td>0</td>
+                                <td>18K</td>
+                                <td>22K</td>
+                                <td style="background: #fff9e6;">200K</td>
+                                <td style="background: #fff9e6;">0</td>
+                                <td style="background: #fff9e6;">20K</td>
+                                <td style="background: #fff9e6;">25K</td>
+                                <td style="background: #ffe6e6;">300K</td>
+                                <td style="background: #ffe6e6;">0</td>
+                                <td style="background: #ffe6e6;">28K</td>
+                                <td style="background: #ffe6e6;">35K</td>
+                                <td style="background: #e6f2ff;">130K</td>
+                                <td style="background: #e6f2ff;">0</td>
+                                <td style="background: #e6f2ff;">18K</td>
+                                <td style="background: #e6f2ff;">22K</td>
+                            </tr>
+                            <tr style="background: #f9fdf9;">
+                                <td class="row-header">토</td>
+                                <td>200K</td>
+                                <td>0</td>
+                                <td>20K</td>
+                                <td>25K</td>
+                                <td style="background: #fff9e6;">250K</td>
+                                <td style="background: #fff9e6;">0</td>
+                                <td style="background: #fff9e6;">23K</td>
+                                <td style="background: #fff9e6;">28K</td>
+                                <td style="background: #ffe6e6;">350K</td>
+                                <td style="background: #ffe6e6;">0</td>
+                                <td style="background: #ffe6e6;">30K</td>
+                                <td style="background: #ffe6e6;">40K</td>
+                                <td style="background: #e6f2ff;">160K</td>
+                                <td style="background: #e6f2ff;">0</td>
+                                <td style="background: #e6f2ff;">20K</td>
+                                <td style="background: #e6f2ff;">25K</td>
+                            </tr>
+                            <tr style="background: #f9fdf9;">
+                                <td class="row-header">일</td>
+                                <td>150K</td>
+                                <td>0</td>
+                                <td>15K</td>
+                                <td>20K</td>
+                                <td style="background: #fff9e6;">180K</td>
+                                <td style="background: #fff9e6;">0</td>
+                                <td style="background: #fff9e6;">18K</td>
+                                <td style="background: #fff9e6;">23K</td>
+                                <td style="background: #ffe6e6;">280K</td>
+                                <td style="background: #ffe6e6;">0</td>
+                                <td style="background: #ffe6e6;">25K</td>
+                                <td style="background: #ffe6e6;">30K</td>
+                                <td style="background: #e6f2ff;">120K</td>
+                                <td style="background: #e6f2ff;">0</td>
+                                <td style="background: #e6f2ff;">15K</td>
+                                <td style="background: #e6f2ff;">20K</td>
+                            </tr>
+
+                            <!-- Standard 그룹 -->
+                            <tr style="background: #f9fbfd;">
+                                <td rowspan="4" class="row-header" style="background: #e3f2fd; font-weight: 600;">🏠 102호<br>(스탠다드)</td>
+                                <td class="row-header">월~목</td>
+                                <td>90K</td>
+                                <td>0</td>
+                                <td>12K</td>
+                                <td>15K</td>
+                                <td style="background: #fff9e6;">110K</td>
+                                <td style="background: #fff9e6;">0</td>
+                                <td style="background: #fff9e6;">15K</td>
+                                <td style="background: #fff9e6;">18K</td>
+                                <td style="background: #ffe6e6;">180K</td>
+                                <td style="background: #ffe6e6;">0</td>
+                                <td style="background: #ffe6e6;">20K</td>
+                                <td style="background: #ffe6e6;">25K</td>
+                                <td style="background: #e6f2ff;">70K</td>
+                                <td style="background: #e6f2ff;">0</td>
+                                <td style="background: #e6f2ff;">12K</td>
+                                <td style="background: #e6f2ff;">15K</td>
+                            </tr>
+                            <tr style="background: #f9fbfd;">
+                                <td class="row-header">금</td>
+                                <td>110K</td>
+                                <td>0</td>
+                                <td>15K</td>
+                                <td>18K</td>
+                                <td style="background: #fff9e6;">140K</td>
+                                <td style="background: #fff9e6;">0</td>
+                                <td style="background: #fff9e6;">18K</td>
+                                <td style="background: #fff9e6;">21K</td>
+                                <td style="background: #ffe6e6;">220K</td>
+                                <td style="background: #ffe6e6;">0</td>
+                                <td style="background: #ffe6e6;">23K</td>
+                                <td style="background: #ffe6e6;">28K</td>
+                                <td style="background: #e6f2ff;">90K</td>
+                                <td style="background: #e6f2ff;">0</td>
+                                <td style="background: #e6f2ff;">15K</td>
+                                <td style="background: #e6f2ff;">18K</td>
+                            </tr>
+                            <tr style="background: #f9fbfd;">
+                                <td class="row-header">토</td>
+                                <td>130K</td>
+                                <td>0</td>
+                                <td>18K</td>
+                                <td>20K</td>
+                                <td style="background: #fff9e6;">170K</td>
+                                <td style="background: #fff9e6;">0</td>
+                                <td style="background: #fff9e6;">20K</td>
+                                <td style="background: #fff9e6;">23K</td>
+                                <td style="background: #ffe6e6;">260K</td>
+                                <td style="background: #ffe6e6;">0</td>
+                                <td style="background: #ffe6e6;">25K</td>
+                                <td style="background: #ffe6e6;">30K</td>
+                                <td style="background: #e6f2ff;">110K</td>
+                                <td style="background: #e6f2ff;">0</td>
+                                <td style="background: #e6f2ff;">18K</td>
+                                <td style="background: #e6f2ff;">20K</td>
+                            </tr>
+                            <tr style="background: #f9fbfd;">
+                                <td class="row-header">일</td>
+                                <td>100K</td>
+                                <td>0</td>
+                                <td>12K</td>
+                                <td>15K</td>
+                                <td style="background: #fff9e6;">130K</td>
+                                <td style="background: #fff9e6;">0</td>
+                                <td style="background: #fff9e6;">15K</td>
+                                <td style="background: #fff9e6;">18K</td>
+                                <td style="background: #ffe6e6;">200K</td>
+                                <td style="background: #ffe6e6;">0</td>
+                                <td style="background: #ffe6e6;">20K</td>
+                                <td style="background: #ffe6e6;">25K</td>
+                                <td style="background: #e6f2ff;">80K</td>
+                                <td style="background: #e6f2ff;">0</td>
+                                <td style="background: #e6f2ff;">12K</td>
+                                <td style="background: #e6f2ff;">15K</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="legend" style="margin-top: 15px;">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: white;"></div>
+                        <span>기본 요금</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fff9e6;"></div>
+                        <span>준성수기</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ffe6e6;"></div>
+                        <span>성수기</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e6f2ff;"></div>
+                        <span>비수기</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f5f5f5;"></div>
+                        <span>미적용</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 퀵 액션 -->
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">⚡ 퀵 액션</h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+                    <button class="btn btn-secondary" onclick="showQuickAction('chuseok')" style="padding: 15px; text-align: left; display: flex; flex-direction: column; gap: 5px;">
+                        <div style="font-weight: 600; font-size: 14px;">🌕 추석 연휴 (9/14~9/18)</div>
+                        <div style="font-size: 12px; color: #666;">5일 연휴 요금 일괄 변경</div>
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="showQuickAction('christmas')" style="padding: 15px; text-align: left; display: flex; flex-direction: column; gap: 5px;">
+                        <div style="font-weight: 600; font-size: 14px;">🎄 크리스마스 (12/23~12/25)</div>
+                        <div style="font-size: 12px; color: #666;">특별 요금 빠르게 설정</div>
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="showQuickAction('newyear')" style="padding: 15px; text-align: left; display: flex; flex-direction: column; gap: 5px;">
+                        <div style="font-weight: 600; font-size: 14px;">🎊 연말연시 (12/30~1/2)</div>
+                        <div style="font-size: 12px; color: #666;">연말 특수 대응</div>
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="showQuickAction('weekend')" style="padding: 15px; text-align: left; display: flex; flex-direction: column; gap: 5px;">
+                        <div style="font-weight: 600; font-size: 14px;">📅 이번 주말 (토~일)</div>
+                        <div style="font-size: 12px; color: #666;">긴급 할인/할증</div>
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="showQuickAction('custom')" style="padding: 15px; text-align: left; display: flex; flex-direction: column; gap: 5px;">
+                        <div style="font-weight: 600; font-size: 14px;">✨ 커스텀 기간</div>
+                        <div style="font-size: 12px; color: #666;">직접 날짜 선택</div>
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="showQuickAction('holiday')" style="padding: 15px; text-align: left; display: flex; flex-direction: column; gap: 5px;">
+                        <div style="font-weight: 600; font-size: 14px;">🎌 공휴일 자동인식</div>
+                        <div style="font-size: 12px; color: #666;">남은 공휴일 일괄 적용</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 요약 통계 -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">📊 평균 객실요금</div>
+                    <div style="font-size: 24px; font-weight: 600; color: #4CAF50;">165,400원</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 5px;">전체 객실 평균 (평시 기준)</div>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">🌸 설정된 시즌</div>
+                    <div style="font-size: 24px; font-weight: 600; color: #2196F3;">3개</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 5px;">총 178일 적용 (48.8%)</div>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 8px;">✏️ 수동 설정</div>
+                    <div style="font-size: 24px; font-weight: 600; color: #FF9800;">12개</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 5px;">날짜 (특별 이벤트 등)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 요금 전체보기 -->
+        <div id="currentView" class="content-section active">
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 5px;">💰 현재 판매 중인 요금</h2>
+                        <div style="font-size: 13px; color: #666;">모든 설정이 적용된 최종 판매가</div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary">📤 공유</button>
+                        <button class="btn btn-secondary">📊 엑셀</button>
+                    </div>
+                </div>
+
+                <!-- 채널 필터 -->
+                <div style="background: #f5f5f5; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 20px;">
+                    <div style="font-weight: 600; font-size: 14px;">💰 표시할 채널:</div>
+                    <label style="cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                        <input type="checkbox" checked style="width: 16px; height: 16px;">
+                        <span>🏠 예약창 요금</span>
+                    </label>
+                    <label style="cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                        <input type="checkbox" checked style="width: 16px; height: 16px;">
+                        <span>🌐 온라인채널 요금</span>
+                    </label>
+                </div>
+
+                <div class="control-bar">
+                    <div style="flex: 1;">
+                        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">📅 조회 기간</div>
+                        <select style="padding: 8px 12px; border: none; border-radius: 6px; font-size: 14px;">
+                            <option>2024년 3월</option>
+                            <option>2024년 4월</option>
+                            <option>2024년 7월</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">🏠 표시 객실</div>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                            <label style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 15px; cursor: pointer; font-size: 11px;">
+                                <input type="checkbox" checked> 전체
+                            </label>
+                            <label style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 15px; cursor: pointer; font-size: 11px;">
+                                <input type="checkbox" checked> 101호
+                            </label>
+                            <label style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 15px; cursor: pointer; font-size: 11px;">
+                                <input type="checkbox" checked> 102호
+                            </label>
+                            <label style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 15px; cursor: pointer; font-size: 11px;">
+                                <input type="checkbox" checked> 201호
+                            </label>
+                            <label style="background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 15px; cursor: pointer; font-size: 11px;">
+                                <input type="checkbox" checked> ...외 16개
+                            </label>
+                        </div>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">📊 총 객실 수</div>
+                        <div style="font-size: 18px; font-weight: 600;">20개 타입</div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 15px;">2024년 3월</h3>
+
+                <div class="cal-grid">
+                    <div class="cal-header" style="color: #f44336;">일</div>
+                    <div class="cal-header">월</div>
+                    <div class="cal-header">화</div>
+                    <div class="cal-header">수</div>
+                    <div class="cal-header">목</div>
+                    <div class="cal-header">금</div>
+                    <div class="cal-header" style="color: #2196F3;">토</div>
+
+                    <div class="cal-cell empty"></div>
+                    <div class="cal-cell empty"></div>
+                    <div class="cal-cell empty"></div>
+                    <div class="cal-cell empty"></div>
+                    <div class="cal-cell empty"></div>
+
+                    <div class="cal-cell">
+                        <div class="date-num">1</div>
+                        <div class="date-label">평일 · 20개 객실</div>
+                        <div style="font-size: 10px; color: #666; margin-top: 4px;">
+                            <div style="margin-bottom: 3px;">최저가: <strong style="color: #4CAF50;">🏠90K / 🌐80K</strong></div>
+                            <div style="margin-bottom: 3px;">최고가: <strong style="color: #f44336;">🏠350K / 🌐320K</strong></div>
+                            <div>평균: <strong>🏠180K / 🌐160K</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="cal-cell weekend-sat sold-out">
+                        <div class="date-num" style="color: #2196F3;">2</div>
+                        <div class="date-label">주말 🔥 · 20개 객실</div>
+                        <div style="font-size: 10px; color: #666; margin-top: 4px;">
+                            <div style="margin-bottom: 3px;">최저가: <strong style="color: #4CAF50;">🏠140K / 🌐120K</strong></div>
+                            <div style="margin-bottom: 3px;">최고가: <strong style="color: #f44336;">🏠550K / 🌐500K</strong></div>
+                            <div style="color: #f44336; font-weight: 600; margin-top: 4px;">✓ 전체 매진</div>
+                        </div>
+                    </div>
+
+                    <div class="cal-cell weekend-sun">
+                        <div class="date-num" style="color: #f44336;">3</div>
+                        <div class="date-label">일요일 · 20개 객실</div>
+                        <div style="font-size: 10px; color: #666; margin-top: 4px;">
+                            <div>🏠100K~400K / 🌐90K~360K</div>
+                            <div>평균: <strong>🏠205K / 🌐185K</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="cal-cell">
+                        <div class="date-num">4</div>
+                        <div class="date-label">평일 · 20개 객실</div>
+                        <div style="font-size: 10px; color: #666; margin-top: 4px;">
+                            <div>🏠90K~350K / 🌐80K~320K</div>
+                            <div>평균: <strong>🏠180K / 🌐160K</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="cal-cell">
+                        <div class="date-num">5</div>
+                        <div class="date-label">평일 · 20개 객실</div>
+                        <div style="font-size: 10px; color: #666; margin-top: 4px;">
+                            <div>🏠90K~350K / 🌐80K~320K</div>
+                            <div>평균: <strong>🏠180K / 🌐160K</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="cal-cell">
+                        <div class="date-num">6</div>
+                        <div class="date-label">평일 · 20개 객실</div>
+                        <div style="font-size: 10px; color: #666; margin-top: 4px;">
+                            <div>🏠90K~350K / 🌐80K~320K</div>
+                            <div>평균: <strong>🏠180K / 🌐160K</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="cal-cell weekend-sat">
+                        <div class="date-num" style="color: #2196F3;">9</div>
+                        <div class="date-label">주말 · 20개 객실</div>
+                        <div style="font-size: 10px; color: #666; margin-top: 4px;">
+                            <div>🏠140K~550K / 🌐120K~500K</div>
+                            <div>평균: <strong>🏠285K / 🌐260K</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="cal-cell manual">
+                        <div class="date-num">15 🔧</div>
+                        <div class="date-label">금요일 (수동) · 20개 객실</div>
+                        <div style="font-size: 10px; color: #666; margin-top: 4px;">
+                            <div>🏠110K~450K / 🌐100K~410K</div>
+                            <div>평균: <strong style="color:#ef6c00;">🏠235K* / 🌐210K*</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="cal-cell weekend-sat">
+                        <div class="date-num" style="color: #2196F3;">16</div>
+                        <div class="date-label">주말 · 20개 객실</div>
+                        <div style="font-size: 10px; color: #666; margin-top: 4px;">
+                            <div>140K ~ 550K</div>
+                            <div>평균: <strong>285K</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-bar">
+                    <div>
+                        <div style="color: #666;">🔥 최고 매출 예상일</div>
+                        <div style="font-weight: 600; margin-top: 5px;">3/23 (토)</div>
+                        <div style="font-size: 11px; margin-top: 2px;">🏠 3.3M원 / 🌐 3.0M원</div>
+                    </div>
+                    <div>
+                        <div style="color: #666;">💰 평균 객실 단가</div>
+                        <div style="font-weight: 600; margin-top: 5px;">🏠 152K / 🌐 138K</div>
+                        <div style="font-size: 11px; color: #999; margin-top: 2px;">20개 객실 평균</div>
+                    </div>
+                    <div>
+                        <div style="color: #666;">📊 예상 객실 판매</div>
+                        <div style="font-weight: 600; margin-top: 5px;">620실 (100%)</div>
+                        <div style="font-size: 11px; color: #999; margin-top: 2px;">31일 × 20개 객실</div>
+                    </div>
+                    <div>
+                        <div style="color: #666;">💵 월 예상 매출</div>
+                        <div style="font-weight: 600; margin-top: 5px; color: #4CAF50; font-size: 15px;">🏠 94.5M / 🌐 85.6M</div>
+                        <div style="font-size: 11px; color: #999; margin-top: 2px;">3월 기준</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 객실 그룹 관리 -->
+        <div id="groupsView" class="content-section">
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 18px; font-weight: 600;">객실 그룹 관리</h2>
+                    <button class="btn btn-primary" onclick="showGroupModal()">+ 새 그룹 추가</button>
+                </div>
+
+                <div style="margin-bottom: 20px; padding: 15px; background: #f0f8ff; border-radius: 8px; border-left: 4px solid #2196F3;">
+                    <div style="font-weight: 600; margin-bottom: 5px;">💡 객실 타입 관리</div>
+                    <div style="font-size: 13px; color: #666;">총 20개의 독립적인 객실 타입이 있습니다. 각 객실은 고유한 요금 설정을 가집니다.</div>
+                </div>
+
+                <div class="room-groups" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <!-- 101호 -->
+                    <div class="room-group-card" style="border-left-color: #4CAF50; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🏡 101호 (디럭스 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">4인실 · 복층 · 바다뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">150,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">180,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">220,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">170,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 102호 -->
+                    <div class="room-group-card" style="border-left-color: #2196F3; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🏠 102호 (스탠다드 더블)</div>
+                                <div class="group-rooms" style="font-size: 11px;">2인실 · 평층 · 정원뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">100,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">120,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">150,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">110,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 103호 -->
+                    <div class="room-group-card" style="border-left-color: #FF9800; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🌟 103호 (프리미엄 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">6인실 · 복층 · 오션뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">200,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">250,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">300,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">230,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 104호 -->
+                    <div class="room-group-card" style="border-left-color: #9C27B0; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">👑 104호 (VIP 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">8인실 · 복층 · 루프탑</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">280,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">350,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">400,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">320,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 105호 -->
+                    <div class="room-group-card" style="border-left-color: #4CAF50; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🏡 105호 (디럭스 트윈)</div>
+                                <div class="group-rooms" style="font-size: 11px;">4인실 · 평층 · 산뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">130,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">160,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">190,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">150,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 106호 -->
+                    <div class="room-group-card" style="border-left-color: #2196F3; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🏠 106호 (스탠다드 더블)</div>
+                                <div class="group-rooms" style="font-size: 11px;">2인실 · 평층 · 마당뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">90,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">110,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">140,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">100,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 107호 -->
+                    <div class="room-group-card" style="border-left-color: #FF5722; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🌺 107호 (패밀리 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">6인실 · 복층 · 테라스</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">180,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">220,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">270,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">200,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 108호 -->
+                    <div class="room-group-card" style="border-left-color: #00BCD4; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🌊 108호 (오션 디럭스)</div>
+                                <div class="group-rooms" style="font-size: 11px;">4인실 · 평층 · 오션뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">170,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">200,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">250,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">190,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 109호 -->
+                    <div class="room-group-card" style="border-left-color: #795548; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🪵 109호 (한옥 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">4인실 · 한옥 · 정원뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">160,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">190,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">230,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">180,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 110호 -->
+                    <div class="room-group-card" style="border-left-color: #E91E63; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">💕 110호 (커플 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">2인실 · 복층 · 프라이빗</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">140,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">170,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">210,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">160,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 201호 -->
+                    <div class="room-group-card" style="border-left-color: #673AB7; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🎨 201호 (아트 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">4인실 · 복층 · 갤러리</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">190,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">230,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">280,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">210,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 202호 -->
+                    <div class="room-group-card" style="border-left-color: #3F51B5; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🌃 202호 (스카이 디럭스)</div>
+                                <div class="group-rooms" style="font-size: 11px;">4인실 · 평층 · 시티뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">175,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">210,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">260,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">195,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 203호 -->
+                    <div class="room-group-card" style="border-left-color: #009688; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🌿 203호 (가든 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">6인실 · 복층 · 정원뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">185,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">225,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">275,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">205,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 204호 -->
+                    <div class="room-group-card" style="border-left-color: #FFC107; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">☀️ 204호 (선샤인 디럭스)</div>
+                                <div class="group-rooms" style="font-size: 11px;">4인실 · 평층 · 남향</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">155,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">185,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">235,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">175,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 205호 -->
+                    <div class="room-group-card" style="border-left-color: #8BC34A; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🍃 205호 (에코 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">4인실 · 복층 · 숲뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">165,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">195,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">245,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">185,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 206호 -->
+                    <div class="room-group-card" style="border-left-color: #FF6F00; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🌅 206호 (선셋 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">6인실 · 복층 · 서향뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">195,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">235,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">285,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">215,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 207호 -->
+                    <div class="room-group-card" style="border-left-color: #607D8B; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🏔️ 207호 (마운틴 디럭스)</div>
+                                <div class="group-rooms" style="font-size: 11px;">4인실 · 평층 · 산뷰</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">145,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">175,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">215,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">165,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 208호 -->
+                    <div class="room-group-card" style="border-left-color: #D32F2F; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🌹 208호 (로맨틱 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">2인실 · 복층 · 프라이빗</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">135,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">165,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">200,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">155,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 209호 -->
+                    <div class="room-group-card" style="border-left-color: #C2185B; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">🎭 209호 (시어터 스위트)</div>
+                                <div class="group-rooms" style="font-size: 11px;">6인실 · 복층 · 홈시어터</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">210,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">260,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">310,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">240,000원</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 210호 -->
+                    <div class="room-group-card" style="border-left-color: #6A1B9A; padding: 15px;">
+                        <div class="group-header" style="margin-bottom: 10px;">
+                            <div>
+                                <div class="group-title" style="font-size: 15px;">👑 210호 (로얄 펜트하우스)</div>
+                                <div class="group-rooms" style="font-size: 11px;">8인실 · 복층 · 루프탑풀</div>
+                            </div>
+                        </div>
+                        <div class="group-prices" style="grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">월~목</div>
+                                <div class="price-value" style="font-size: 13px;">350,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">금</div>
+                                <div class="price-value" style="font-size: 13px;">450,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">토</div>
+                                <div class="price-value" style="font-size: 13px;">550,000원</div>
+                            </div>
+                            <div class="price-item" style="padding: 8px;">
+                                <div class="price-label" style="font-size: 10px;">일</div>
+                                <div class="price-value" style="font-size: 13px;">400,000원</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 시즌 설정 -->
+        <div id="seasonView" class="content-section">
+            <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 18px; font-weight: 600;">🌸 시즌별 요금 설정</h2>
+                    <button class="btn btn-primary" onclick="showSeasonModal()">+ 새 시즌 추가</button>
+                </div>
+
+                <!-- 채널 필터 -->
+                <div style="background: #f5f5f5; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 20px;">
+                    <div style="font-weight: 600; font-size: 14px;">💰 표시할 채널:</div>
+                    <label style="cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                        <input type="checkbox" checked style="width: 16px; height: 16px;">
+                        <span>🏠 예약창 요금</span>
+                    </label>
+                    <label style="cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                        <input type="checkbox" checked style="width: 16px; height: 16px;">
+                        <span>🌐 온라인채널 요금</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <!-- 여름 성수기 -->
+                    <div style="border: 2px solid #e0e0e0; border-radius: 12px; padding: 25px; transition: all 0.2s;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                            <div>
+                                <div style="font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                                    🌞 여름 성수기
+                                    <span style="background: #ffebee; color: #c62828; padding: 4px 12px; border-radius: 20px; font-size: 12px;">우선순위: 높음</span>
+                                </div>
+                                <div style="font-size: 13px; color: #666; margin-top: 5px;">2024.07.20 ~ 2024.08.15 (27일)</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm" onclick="showSeasonModal()">수정</button>
+                                <button class="btn btn-secondary btn-sm">복사</button>
+                                <button class="btn btn-secondary btn-sm">삭제</button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <div style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">적용 객실 타입</div>
+
+                            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                <div style="font-weight: 600; margin-bottom: 8px;">✅ 전체 20개 객실 적용</div>
+                                <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                                    101호~210호 모든 객실에 각각의 성수기 요금 적용
+                                </div>
+                                <table class="price-table" style="font-size: 12px;">
+                                    <thead>
+                                        <tr>
+                                            <th>객실 예시</th>
+                                            <th>월~목</th>
+                                            <th>금요일</th>
+                                            <th>토요일</th>
+                                            <th>일요일</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>101호 디럭스</td>
+                                            <td>250,000원</td>
+                                            <td>300,000원</td>
+                                            <td>350,000원</td>
+                                            <td>280,000원</td>
+                                        </tr>
+                                        <tr>
+                                            <td>102호 스탠다드</td>
+                                            <td>180,000원</td>
+                                            <td>220,000원</td>
+                                            <td>260,000원</td>
+                                            <td>200,000원</td>
+                                        </tr>
+                                        <tr>
+                                            <td>210호 펜트하우스</td>
+                                            <td>500,000원</td>
+                                            <td>600,000원</td>
+                                            <td>700,000원</td>
+                                            <td>580,000원</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                                    * 각 객실 타입별로 다른 성수기 요금이 적용됩니다
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 봄 준성수기 -->
+                    <div style="border: 2px solid #e0e0e0; border-radius: 12px; padding: 25px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                            <div>
+                                <div style="font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                                    🌸 봄 준성수기
+                                    <span style="background: #fff3e0; color: #ef6c00; padding: 4px 12px; border-radius: 20px; font-size: 12px;">우선순위: 중</span>
+                                </div>
+                                <div style="font-size: 13px; color: #666; margin-top: 5px;">2024.04.01 ~ 2024.05.31 (61일)</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm">수정</button>
+                                <button class="btn btn-secondary btn-sm">복사</button>
+                                <button class="btn btn-secondary btn-sm">삭제</button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <div style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">적용 객실 그룹</div>
+                            
+                            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                <div style="font-weight: 600; margin-bottom: 8px;">✅ Deluxe 객실 (3개)</div>
+                                <table class="price-table" style="font-size: 12px;">
+                                    <thead>
+                                        <tr>
+                                            <th>월~목</th>
+                                            <th>금요일</th>
+                                            <th>토요일</th>
+                                            <th>일요일</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>150,000원</td>
+                                            <td>200,000원</td>
+                                            <td>250,000원</td>
+                                            <td>180,000원</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                <div style="font-weight: 600; margin-bottom: 8px;">✅ Standard 객실 (4개)</div>
+                                <table class="price-table" style="font-size: 12px;">
+                                    <thead>
+                                        <tr>
+                                            <th>월~목</th>
+                                            <th>금요일</th>
+                                            <th>토요일</th>
+                                            <th>일요일</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>110,000원</td>
+                                            <td>140,000원</td>
+                                            <td>170,000원</td>
+                                            <td>130,000원</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 겨울 비수기 -->
+                    <div style="border: 2px solid #e0e0e0; border-radius: 12px; padding: 25px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                            <div>
+                                <div style="font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                                    ❄️ 겨울 비수기
+                                    <span style="background: #e8f5e9; color: #2e7d32; padding: 4px 12px; border-radius: 20px; font-size: 12px;">우선순위: 낮음</span>
+                                </div>
+                                <div style="font-size: 13px; color: #666; margin-top: 5px;">2024.12.01 ~ 2025.02.28 (90일)</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary btn-sm">수정</button>
+                                <button class="btn btn-secondary btn-sm">복사</button>
+                                <button class="btn btn-secondary btn-sm">삭제</button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <div style="font-size: 14px; font-weight: 600; margin-bottom: 10px;">적용 객실 그룹</div>
+                            
+                            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                                <div style="font-weight: 600; margin-bottom: 8px;">✅ Deluxe 객실 (3개)</div>
+                                <table class="price-table" style="font-size: 12px;">
+                                    <thead>
+                                        <tr>
+                                            <th>월~목</th>
+                                            <th>금요일</th>
+                                            <th>토요일</th>
+                                            <th>일요일</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>100,000원</td>
+                                            <td>130,000원</td>
+                                            <td>160,000원</td>
+                                            <td>120,000원</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                                <div style="font-weight: 600; margin-bottom: 8px;">✅ Standard 객실 (4개)</div>
+                                <table class="price-table" style="font-size: 12px;">
+                                    <thead>
+                                        <tr>
+                                            <th>월~목</th>
+                                            <th>금요일</th>
+                                            <th>토요일</th>
+                                            <th>일요일</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>70,000원</td>
+                                            <td>90,000원</td>
+                                            <td>110,000원</td>
+                                            <td>80,000원</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 캘린더 뷰 -->
+        <div id="calendarView" class="content-section">
+            <div class="view-controls">
+                <label style="font-weight: 600;">표시할 객실:</label>
+                <label class="checkbox-label"><input type="checkbox" checked> 전체 선택</label>
+                <label class="checkbox-label"><input type="checkbox" checked> 101~110호 (10개)</label>
+                <label class="checkbox-label"><input type="checkbox" checked> 201~210호 (10개)</label>
+
+                <span style="margin-left: 20px; font-weight: 600;">💰 표시 채널:</span>
+                <label class="checkbox-label"><input type="checkbox" checked> 🏠 예약창</label>
+                <label class="checkbox-label"><input type="checkbox" checked> 🌐 온라인채널</label>
+
+                <span style="margin-left: auto; font-weight: 600;">전체 20개 객실</span>
+            </div>
+
+            <div class="multi-calendar">
+                <h3 style="font-size: 18px; margin-bottom: 15px;">2024년 3월</h3>
+                
+                <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
+                    <div class="calendar-grid">
+                        <div class="calendar-header-cell">객실</div>
+                        <div class="calendar-header-cell">1(금)</div>
+                        <div class="calendar-header-cell">2(토)</div>
+                        <div class="calendar-header-cell">3(일)</div>
+                        <div class="calendar-header-cell">4(월)</div>
+                        <div class="calendar-header-cell">5(화)</div>
+                        <div class="calendar-header-cell">15(금)</div>
+                        <div class="calendar-header-cell">16(토)</div>
+
+                        <!-- 101~110호 -->
+                        <div class="room-label">101호</div>
+                        <div class="calendar-cell">🏠180K<br>🌐160K</div>
+                        <div class="calendar-cell">🏠220K<br>🌐200K</div>
+                        <div class="calendar-cell">🏠170K<br>🌐155K</div>
+                        <div class="calendar-cell">🏠150K<br>🌐135K</div>
+                        <div class="calendar-cell">🏠150K<br>🌐135K</div>
+                        <div class="calendar-cell">🏠180K<br>🌐160K</div>
+                        <div class="calendar-cell">🏠220K<br>🌐200K</div>
+
+                        <div class="room-label">102호</div>
+                        <div class="calendar-cell">🏠120K<br>🌐110K</div>
+                        <div class="calendar-cell sold-out">🏠150K<br>🌐135K</div>
+                        <div class="calendar-cell">🏠110K<br>🌐100K</div>
+                        <div class="calendar-cell">🏠100K<br>🌐90K</div>
+                        <div class="calendar-cell">🏠100K<br>🌐90K</div>
+                        <div class="calendar-cell">🏠120K<br>🌐110K</div>
+                        <div class="calendar-cell">🏠150K<br>🌐135K</div>
+
+                        <div class="room-label">103호</div>
+                        <div class="calendar-cell">🏠250K<br>🌐225K</div>
+                        <div class="calendar-cell sold-out">🏠300K<br>🌐270K</div>
+                        <div class="calendar-cell">🏠230K<br>🌐210K</div>
+                        <div class="calendar-cell">🏠200K<br>🌐180K</div>
+                        <div class="calendar-cell">🏠200K<br>🌐180K</div>
+                        <div class="calendar-cell">🏠250K<br>🌐225K</div>
+                        <div class="calendar-cell">🏠300K<br>🌐270K</div>
+
+                        <div class="room-label">104호</div>
+                        <div class="calendar-cell">🏠350K<br>🌐315K</div>
+                        <div class="calendar-cell sold-out">🏠400K<br>🌐360K</div>
+                        <div class="calendar-cell">🏠320K<br>🌐290K</div>
+                        <div class="calendar-cell">🏠280K<br>🌐255K</div>
+                        <div class="calendar-cell">🏠280K<br>🌐255K</div>
+                        <div class="calendar-cell">350K</div>
+                        <div class="calendar-cell sold-out">🏠400K<br>🌐360K</div>
+
+                        <div class="room-label">105호</div>
+                        <div class="calendar-cell">160K</div>
+                        <div class="calendar-cell">190K</div>
+                        <div class="calendar-cell">150K</div>
+                        <div class="calendar-cell">130K</div>
+                        <div class="calendar-cell">130K</div>
+                        <div class="calendar-cell">160K</div>
+                        <div class="calendar-cell">190K</div>
+
+                        <div class="room-label">106호</div>
+                        <div class="calendar-cell">110K</div>
+                        <div class="calendar-cell">140K</div>
+                        <div class="calendar-cell">100K</div>
+                        <div class="calendar-cell">90K</div>
+                        <div class="calendar-cell">90K</div>
+                        <div class="calendar-cell">110K</div>
+                        <div class="calendar-cell">140K</div>
+
+                        <div class="room-label">107호</div>
+                        <div class="calendar-cell">220K</div>
+                        <div class="calendar-cell">270K</div>
+                        <div class="calendar-cell">200K</div>
+                        <div class="calendar-cell">180K</div>
+                        <div class="calendar-cell">180K</div>
+                        <div class="calendar-cell">220K</div>
+                        <div class="calendar-cell">270K</div>
+
+                        <div class="room-label">108호</div>
+                        <div class="calendar-cell">200K</div>
+                        <div class="calendar-cell">250K</div>
+                        <div class="calendar-cell">190K</div>
+                        <div class="calendar-cell">170K</div>
+                        <div class="calendar-cell">170K</div>
+                        <div class="calendar-cell">200K</div>
+                        <div class="calendar-cell">250K</div>
+
+                        <div class="room-label">109호</div>
+                        <div class="calendar-cell">190K</div>
+                        <div class="calendar-cell">230K</div>
+                        <div class="calendar-cell">180K</div>
+                        <div class="calendar-cell">160K</div>
+                        <div class="calendar-cell">160K</div>
+                        <div class="calendar-cell">190K</div>
+                        <div class="calendar-cell">230K</div>
+
+                        <div class="room-label">110호</div>
+                        <div class="calendar-cell">170K</div>
+                        <div class="calendar-cell">210K</div>
+                        <div class="calendar-cell">160K</div>
+                        <div class="calendar-cell">140K</div>
+                        <div class="calendar-cell">140K</div>
+                        <div class="calendar-cell">170K</div>
+                        <div class="calendar-cell">210K</div>
+
+                        <!-- 201~210호 -->
+                        <div class="room-label">201호</div>
+                        <div class="calendar-cell">230K</div>
+                        <div class="calendar-cell">🏠280K<br>🌐255K</div>
+                        <div class="calendar-cell">210K</div>
+                        <div class="calendar-cell">190K</div>
+                        <div class="calendar-cell">190K</div>
+                        <div class="calendar-cell">230K</div>
+                        <div class="calendar-cell">🏠280K<br>🌐255K</div>
+
+                        <div class="room-label">202호</div>
+                        <div class="calendar-cell">210K</div>
+                        <div class="calendar-cell">260K</div>
+                        <div class="calendar-cell">195K</div>
+                        <div class="calendar-cell">175K</div>
+                        <div class="calendar-cell">175K</div>
+                        <div class="calendar-cell">210K</div>
+                        <div class="calendar-cell">260K</div>
+
+                        <div class="room-label">203호</div>
+                        <div class="calendar-cell">225K</div>
+                        <div class="calendar-cell">275K</div>
+                        <div class="calendar-cell">205K</div>
+                        <div class="calendar-cell">185K</div>
+                        <div class="calendar-cell">185K</div>
+                        <div class="calendar-cell manual">225K🔧</div>
+                        <div class="calendar-cell">275K</div>
+
+                        <div class="room-label">204호</div>
+                        <div class="calendar-cell">185K</div>
+                        <div class="calendar-cell">235K</div>
+                        <div class="calendar-cell">175K</div>
+                        <div class="calendar-cell">155K</div>
+                        <div class="calendar-cell">155K</div>
+                        <div class="calendar-cell">185K</div>
+                        <div class="calendar-cell">235K</div>
+
+                        <div class="room-label">205호</div>
+                        <div class="calendar-cell">195K</div>
+                        <div class="calendar-cell">245K</div>
+                        <div class="calendar-cell">185K</div>
+                        <div class="calendar-cell">165K</div>
+                        <div class="calendar-cell">165K</div>
+                        <div class="calendar-cell">195K</div>
+                        <div class="calendar-cell">245K</div>
+
+                        <div class="room-label">206호</div>
+                        <div class="calendar-cell">235K</div>
+                        <div class="calendar-cell">285K</div>
+                        <div class="calendar-cell">215K</div>
+                        <div class="calendar-cell">195K</div>
+                        <div class="calendar-cell">195K</div>
+                        <div class="calendar-cell">235K</div>
+                        <div class="calendar-cell">285K</div>
+
+                        <div class="room-label">207호</div>
+                        <div class="calendar-cell">175K</div>
+                        <div class="calendar-cell">215K</div>
+                        <div class="calendar-cell">165K</div>
+                        <div class="calendar-cell">145K</div>
+                        <div class="calendar-cell">145K</div>
+                        <div class="calendar-cell">175K</div>
+                        <div class="calendar-cell">215K</div>
+
+                        <div class="room-label">208호</div>
+                        <div class="calendar-cell">165K</div>
+                        <div class="calendar-cell">200K</div>
+                        <div class="calendar-cell">155K</div>
+                        <div class="calendar-cell">135K</div>
+                        <div class="calendar-cell">135K</div>
+                        <div class="calendar-cell">165K</div>
+                        <div class="calendar-cell">200K</div>
+
+                        <div class="room-label">209호</div>
+                        <div class="calendar-cell">260K</div>
+                        <div class="calendar-cell">310K</div>
+                        <div class="calendar-cell">240K</div>
+                        <div class="calendar-cell">210K</div>
+                        <div class="calendar-cell">210K</div>
+                        <div class="calendar-cell">260K</div>
+                        <div class="calendar-cell">310K</div>
+
+                        <div class="room-label">210호</div>
+                        <div class="calendar-cell">450K</div>
+                        <div class="calendar-cell">550K</div>
+                        <div class="calendar-cell">400K</div>
+                        <div class="calendar-cell">350K</div>
+                        <div class="calendar-cell">350K</div>
+                        <div class="calendar-cell">450K</div>
+                        <div class="calendar-cell group-exception">550K*</div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e8f5e9;"></div>
+                        <span>디럭스 타입</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e3f2fd;"></div>
+                        <span>스탠다드 타입</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f3e5f5;"></div>
+                        <span>프리미엄 타입</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fff3e0;"></div>
+                        <span>🔧 수동 설정</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #f5f5f5;"></div>
+                        <span>🔴 매진</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #fce4ec;"></div>
+                        <span>* 특별 요금</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 테이블 뷰 -->
+        <div id="tableView" class="content-section">
+            <div class="view-controls">
+                <div class="sub-tabs">
+                    <button class="sub-tab active" onclick="switchTableView('date')">날짜별 보기</button>
+                    <button class="sub-tab" onclick="switchTableView('room')">객실별 보기</button>
+                </div>
+
+                <label style="margin-left: 15px;">기간:</label>
+                <input type="date" value="2024-03-01" style="padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 6px;">
+                <span>~</span>
+                <input type="date" value="2024-03-10" style="padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 6px;">
+
+                <span style="margin-left: 20px; font-weight: 600;">💰 채널:</span>
+                <label class="checkbox-label"><input type="checkbox" checked> 🏠 예약창</label>
+                <label class="checkbox-label"><input type="checkbox" checked> 🌐 온라인채널</label>
+
+                <button class="btn btn-secondary btn-sm" style="margin-left: auto;">엑셀 다운로드</button>
+                <button class="btn btn-primary btn-sm" onclick="toggleEditMode()">편집 모드</button>
+            </div>
+
+            <div id="editBar" class="inline-edit-bar">
+                <span style="font-weight: 600;">선택한 셀: <span id="selectedCount">0</span>개</span>
+                <input type="text" placeholder="요금 입력" id="bulkPrice">
+                <button class="btn btn-secondary btn-sm">적용</button>
+                <button class="btn btn-secondary btn-sm" onclick="cancelEdit()">취소</button>
+            </div>
+
+            <!-- 날짜별 보기 -->
+            <div id="dateView" class="table-wrapper">
+                <table class="data-table" style="font-size: 11px;">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="min-width: 80px;">날짜</th>
+                            <th rowspan="2">요일</th>
+                            <th colspan="10">101~110호</th>
+                            <th colspan="10">201~210호</th>
+                        </tr>
+                        <tr>
+                            <th style="min-width: 50px;">101</th>
+                            <th style="min-width: 50px;">102</th>
+                            <th style="min-width: 50px;">103</th>
+                            <th style="min-width: 50px;">104</th>
+                            <th style="min-width: 50px;">105</th>
+                            <th style="min-width: 50px;">106</th>
+                            <th style="min-width: 50px;">107</th>
+                            <th style="min-width: 50px;">108</th>
+                            <th style="min-width: 50px;">109</th>
+                            <th style="min-width: 50px;">110</th>
+                            <th style="min-width: 50px;">201</th>
+                            <th style="min-width: 50px;">202</th>
+                            <th style="min-width: 50px;">203</th>
+                            <th style="min-width: 50px;">204</th>
+                            <th style="min-width: 50px;">205</th>
+                            <th style="min-width: 50px;">206</th>
+                            <th style="min-width: 50px;">207</th>
+                            <th style="min-width: 50px;">208</th>
+                            <th style="min-width: 50px;">209</th>
+                            <th style="min-width: 50px;">210</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="row-header">3/1</td>
+                            <td>금</td>
+                            <td class="price-cell" onclick="selectCell(this)">🏠180K<br>🌐160K</td>
+                            <td class="price-cell" onclick="selectCell(this)">🏠120K<br>🌐110K</td>
+                            <td class="price-cell" onclick="selectCell(this)">🏠250K<br>🌐225K</td>
+                            <td class="price-cell" onclick="selectCell(this)">🏠350K<br>🌐315K</td>
+                            <td class="price-cell" onclick="selectCell(this)">🏠160K<br>🌐145K</td>
+                            <td class="price-cell" onclick="selectCell(this)">🏠110K<br>🌐100K</td>
+                            <td class="price-cell" onclick="selectCell(this)">🏠220K<br>🌐200K</td>
+                            <td class="price-cell" onclick="selectCell(this)">🏠200K<br>🌐180K</td>
+                            <td class="price-cell" onclick="selectCell(this)">🏠190K<br>🌐170K</td>
+                            <td class="price-cell" onclick="selectCell(this)">🏠170K<br>🌐155K</td>
+                            <td class="price-cell" onclick="selectCell(this)">230K</td>
+                            <td class="price-cell" onclick="selectCell(this)">210K</td>
+                            <td class="price-cell" onclick="selectCell(this)">225K</td>
+                            <td class="price-cell" onclick="selectCell(this)">185K</td>
+                            <td class="price-cell" onclick="selectCell(this)">195K</td>
+                            <td class="price-cell" onclick="selectCell(this)">235K</td>
+                            <td class="price-cell" onclick="selectCell(this)">175K</td>
+                            <td class="price-cell" onclick="selectCell(this)">165K</td>
+                            <td class="price-cell" onclick="selectCell(this)">260K</td>
+                            <td class="price-cell" onclick="selectCell(this)">450K</td>
+                        </tr>
+                        <tr>
+                            <td class="row-header">3/2</td>
+                            <td>토</td>
+                            <td class="price-cell" onclick="selectCell(this)">220K</td>
+                            <td class="price-cell sold-out" onclick="selectCell(this)">150K</td>
+                            <td class="price-cell sold-out" onclick="selectCell(this)">300K</td>
+                            <td class="price-cell sold-out" onclick="selectCell(this)">400K</td>
+                            <td class="price-cell" onclick="selectCell(this)">190K</td>
+                            <td class="price-cell" onclick="selectCell(this)">140K</td>
+                            <td class="price-cell" onclick="selectCell(this)">270K</td>
+                            <td class="price-cell" onclick="selectCell(this)">250K</td>
+                            <td class="price-cell" onclick="selectCell(this)">230K</td>
+                            <td class="price-cell" onclick="selectCell(this)">210K</td>
+                            <td class="price-cell" onclick="selectCell(this)">280K</td>
+                            <td class="price-cell" onclick="selectCell(this)">260K</td>
+                            <td class="price-cell" onclick="selectCell(this)">275K</td>
+                            <td class="price-cell" onclick="selectCell(this)">235K</td>
+                            <td class="price-cell" onclick="selectCell(this)">245K</td>
+                            <td class="price-cell" onclick="selectCell(this)">285K</td>
+                            <td class="price-cell" onclick="selectCell(this)">215K</td>
+                            <td class="price-cell" onclick="selectCell(this)">200K</td>
+                            <td class="price-cell" onclick="selectCell(this)">310K</td>
+                            <td class="price-cell group-exception" onclick="selectCell(this)">550K<span class="cell-badge">*</span></td>
+                        </tr>
+                        <tr>
+                            <td class="row-header">3/3</td>
+                            <td>일</td>
+                            <td class="price-cell" onclick="selectCell(this)">170K</td>
+                            <td class="price-cell" onclick="selectCell(this)">110K</td>
+                            <td class="price-cell" onclick="selectCell(this)">230K</td>
+                            <td class="price-cell" onclick="selectCell(this)">320K</td>
+                            <td class="price-cell" onclick="selectCell(this)">150K</td>
+                            <td class="price-cell" onclick="selectCell(this)">100K</td>
+                            <td class="price-cell" onclick="selectCell(this)">200K</td>
+                            <td class="price-cell" onclick="selectCell(this)">190K</td>
+                            <td class="price-cell" onclick="selectCell(this)">180K</td>
+                            <td class="price-cell" onclick="selectCell(this)">160K</td>
+                            <td class="price-cell" onclick="selectCell(this)">210K</td>
+                            <td class="price-cell" onclick="selectCell(this)">195K</td>
+                            <td class="price-cell" onclick="selectCell(this)">205K</td>
+                            <td class="price-cell" onclick="selectCell(this)">175K</td>
+                            <td class="price-cell" onclick="selectCell(this)">185K</td>
+                            <td class="price-cell" onclick="selectCell(this)">215K</td>
+                            <td class="price-cell" onclick="selectCell(this)">165K</td>
+                            <td class="price-cell" onclick="selectCell(this)">155K</td>
+                            <td class="price-cell" onclick="selectCell(this)">240K</td>
+                            <td class="price-cell" onclick="selectCell(this)">400K</td>
+                        </tr>
+                        <tr>
+                            <td class="row-header">3/4</td>
+                            <td>월</td>
+                            <td class="price-cell" onclick="selectCell(this)">150K</td>
+                            <td class="price-cell" onclick="selectCell(this)">100K</td>
+                            <td class="price-cell" onclick="selectCell(this)">200K</td>
+                            <td class="price-cell" onclick="selectCell(this)">280K</td>
+                            <td class="price-cell" onclick="selectCell(this)">130K</td>
+                            <td class="price-cell" onclick="selectCell(this)">90K</td>
+                            <td class="price-cell" onclick="selectCell(this)">180K</td>
+                            <td class="price-cell" onclick="selectCell(this)">170K</td>
+                            <td class="price-cell" onclick="selectCell(this)">160K</td>
+                            <td class="price-cell" onclick="selectCell(this)">140K</td>
+                            <td class="price-cell" onclick="selectCell(this)">190K</td>
+                            <td class="price-cell" onclick="selectCell(this)">175K</td>
+                            <td class="price-cell" onclick="selectCell(this)">185K</td>
+                            <td class="price-cell" onclick="selectCell(this)">155K</td>
+                            <td class="price-cell" onclick="selectCell(this)">165K</td>
+                            <td class="price-cell" onclick="selectCell(this)">195K</td>
+                            <td class="price-cell" onclick="selectCell(this)">145K</td>
+                            <td class="price-cell" onclick="selectCell(this)">135K</td>
+                            <td class="price-cell" onclick="selectCell(this)">210K</td>
+                            <td class="price-cell" onclick="selectCell(this)">350K</td>
+                        </tr>
+                        <tr>
+                            <td class="row-header">3/15</td>
+                            <td>금</td>
+                            <td class="price-cell" onclick="selectCell(this)">160K</td>
+                            <td class="price-cell" onclick="selectCell(this)">160K</td>
+                            <td class="price-cell manual" onclick="selectCell(this)">150K<span class="cell-badge">🔧</span></td>
+                            <td class="price-cell" onclick="selectCell(this)">110K</td>
+                            <td class="price-cell" onclick="selectCell(this)">110K</td>
+                            <td class="price-cell" onclick="selectCell(this)">110K</td>
+                            <td class="price-cell" onclick="selectCell(this)">110K</td>
+                            <td class="price-cell" onclick="selectCell(this)">300K</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 객실별 보기 (피벗) -->
+            <div id="roomView" class="table-wrapper" style="display: none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="min-width: 80px;">객실</th>
+                            <th rowspan="2">그룹</th>
+                            <th colspan="8">날짜</th>
+                        </tr>
+                        <tr>
+                            <th>3/1(금)</th>
+                            <th>3/2(토)</th>
+                            <th>3/3(일)</th>
+                            <th>3/4(월)</th>
+                            <th>3/5(화)</th>
+                            <th>3/6(수)</th>
+                            <th>3/7(목)</th>
+                            <th>3/8(금)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="row-header">201호</td>
+                            <td>Deluxe</td>
+                            <td class="price-cell" onclick="selectCell(this)">160K</td>
+                            <td class="price-cell group-exception" onclick="selectCell(this)">220K*</td>
+                            <td class="price-cell" onclick="selectCell(this)">150K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">160K</td>
+                        </tr>
+                        <tr>
+                            <td class="row-header">202호</td>
+                            <td>Deluxe</td>
+                            <td class="price-cell" onclick="selectCell(this)">160K</td>
+                            <td class="price-cell" onclick="selectCell(this)">200K</td>
+                            <td class="price-cell" onclick="selectCell(this)">150K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">160K</td>
+                        </tr>
+                        <tr>
+                            <td class="row-header">203호</td>
+                            <td>Deluxe</td>
+                            <td class="price-cell" onclick="selectCell(this)">160K</td>
+                            <td class="price-cell" onclick="selectCell(this)">200K</td>
+                            <td class="price-cell" onclick="selectCell(this)">150K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">120K</td>
+                            <td class="price-cell" onclick="selectCell(this)">160K</td>
+                        </tr>
+                        <tr>
+                            <td class="row-header">101호</td>
+                            <td>Standard</td>
+                            <td class="price-cell" onclick="selectCell(this)">110K</td>
+                            <td class="price-cell" onclick="selectCell(this)">130K</td>
+                            <td class="price-cell" onclick="selectCell(this)">100K</td>
+                            <td class="price-cell" onclick="selectCell(this)">90K</td>
+                            <td class="price-cell" onclick="selectCell(this)">90K</td>
+                            <td class="price-cell" onclick="selectCell(this)">90K</td>
+                            <td class="price-cell" onclick="selectCell(this)">90K</td>
+                            <td class="price-cell" onclick="selectCell(this)">110K</td>
+                        </tr>
+                        <tr>
+                            <td class="row-header">102호</td>
+                            <td>Standard</td>
+                            <td class="price-cell" onclick="selectCell(this)">110K</td>
+                            <td class="price-cell" onclick="selectCell(this)">130K</td>
+                            <td class="price-cell" onclick="selectCell(this)">100K</td>
+                            <td class="price-cell" onclick="selectCell(this)">90K</td>
+                            <td class="price-cell" onclick="selectCell(this)">90K</td>
+                            <td class="price-cell" onclick="selectCell(this)">90K</td>
+                            <td class="price-cell" onclick="selectCell(this)">90K</td>
+                            <td class="price-cell" onclick="selectCell(this)">110K</td>
+                        </tr>
+                        <tr>
+                            <td class="row-header">301호</td>
+                            <td>VIP</td>
+                            <td class="price-cell" onclick="selectCell(this)">300K</td>
+                            <td class="price-cell" onclick="selectCell(this)">400K</td>
+                            <td class="price-cell" onclick="selectCell(this)">350K</td>
+                            <td class="price-cell" onclick="selectCell(this)">250K</td>
+                            <td class="price-cell" onclick="selectCell(this)">250K</td>
+                            <td class="price-cell" onclick="selectCell(this)">250K</td>
+                            <td class="price-cell" onclick="selectCell(this)">250K</td>
+                            <td class="price-cell" onclick="selectCell(this)">300K</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e8f5e9;"></div>
+                    <span>Deluxe 그룹</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e3f2fd;"></div>
+                    <span>Standard 그룹</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f3e5f5;"></div>
+                    <span>VIP 그룹</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fff3e0;"></div>
+                    <span>🔧 수동 설정</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #fce4ec;"></div>
+                    <span>* 그룹 예외</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 대량 수정 -->
+        <div id="bulkEdit" class="content-section">
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 20px;">✏️ 대량 수정</h2>
+
+                <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 15px;">1단계: 수정 대상 선택</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">기간</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="date" class="form-input" value="2024-03-20" style="width: 150px;">
+                            <span>~</span>
+                            <input type="date" class="form-input" value="2024-03-25" style="width: 150px;">
+                            <span style="color: #666;">(6일)</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">객실 선택</label>
+                        
+                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 15px; margin-bottom: 10px; background: #e8f5e9;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <strong>🏡 Deluxe 객실</strong>
+                                <button class="btn btn-secondary btn-sm">전체</button>
+                            </div>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label"><input type="checkbox" checked> 201호</label>
+                                <label class="checkbox-label"><input type="checkbox" checked> 202호</label>
+                                <label class="checkbox-label"><input type="checkbox" checked> 203호</label>
+                            </div>
+                        </div>
+
+                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 15px; margin-bottom: 10px; background: #e3f2fd;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <strong>🏠 Standard 객실</strong>
+                                <button class="btn btn-secondary btn-sm">전체</button>
+                            </div>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label"><input type="checkbox" checked> 101호</label>
+                                <label class="checkbox-label"><input type="checkbox" checked> 102호</label>
+                                <label class="checkbox-label"><input type="checkbox"> 103호</label>
+                                <label class="checkbox-label"><input type="checkbox"> 104호</label>
+                            </div>
+                        </div>
+
+                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 15px; background: #f3e5f5;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <strong>👑 VIP Suite</strong>
+                            </div>
+                            <div class="checkbox-group">
+                                <label class="checkbox-label"><input type="checkbox"> 301호</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: #f9f9f9; padding: 12px; border-radius: 6px; font-size: 14px;">
+                        <strong>선택된 객실:</strong> 5개 (Deluxe 3개, Standard 2개)<br>
+                        <strong>영향받는 날짜:</strong> 30개 (5객실 × 6일)
+                    </div>
+                </div>
+
+                <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 15px;">2단계: 수정 내용</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">💰 객실 기본요금</label>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <label class="checkbox-label">
+                                <input type="radio" name="priceType" checked>
+                                고정 금액: <input type="text" value="200000" style="width: 100px; margin-left: 5px; padding: 6px;">원
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="radio" name="priceType">
+                                현재가 기준: +<input type="text" style="width: 100px; margin-left: 5px; padding: 6px;">원
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox">
+                                그룹별로 다르게 적용
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="background: #f0f8ff; padding: 12px; border-radius: 6px; margin-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                            <span>Deluxe:</span>
+                            <input type="text" value="210000" style="width: 100px; padding: 4px;">
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                            <span>Standard:</span>
+                            <input type="text" value="160000" style="width: 100px; padding: 4px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #e8f5e9; border: 1px solid #4CAF50; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 10px;">3단계: 영향 미리보기</h3>
+                    <div style="font-size: 14px; margin-bottom: 10px;">
+                        <strong>✅ 자동 반영:</strong> 25개 날짜<br>
+                        <strong>⊘ 영향 없음:</strong> 5개 (수동 설정된 날짜)
+                    </div>
+                    <details style="font-size: 13px; color: #666;">
+                        <summary style="cursor: pointer; font-weight: 500;">객실별 상세보기</summary>
+                        <div style="margin-top: 10px; padding-left: 15px;">
+                            • 201호: 6개 적용, 0개 제외<br>
+                            • 202호: 6개 적용, 0개 제외<br>
+                            • 203호: 5개 적용, 1개 제외 (3/20 수동설정)<br>
+                            • 101호: 6개 적용, 0개 제외<br>
+                            • 102호: 2개 적용, 4개 제외 (수동설정 다수)
+                        </div>
+                    </details>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary">취소</button>
+                    <button class="btn btn-primary">적용</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 객실 그룹 추가 모달 -->
+    <div id="groupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">🏠 객실 그룹 설정</div>
+            
+            <div class="form-group">
+                <label class="form-label">그룹명</label>
+                <input type="text" class="form-input" placeholder="예: Deluxe 객실">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">포함할 객실</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label"><input type="checkbox"> 201호</label>
+                    <label class="checkbox-label"><input type="checkbox"> 202호</label>
+                    <label class="checkbox-label"><input type="checkbox"> 203호</label>
+                    <label class="checkbox-label"><input type="checkbox"> 301호</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">기본 요금 설정</label>
+                <table class="price-table">
+                    <thead>
+                        <tr>
+                            <th>요일</th>
+                            <th>객실 기본요금</th>
+                            <th>영유아</th>
+                            <th>아동</th>
+                            <th>성인</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>월~목</td>
+                            <td><input type="text" placeholder="120000"></td>
+                            <td><input type="text" placeholder="0"></td>
+                            <td><input type="text" placeholder="15000"></td>
+                            <td><input type="text" placeholder="20000"></td>
+                        </tr>
+                        <tr>
+                            <td>금요일</td>
+                            <td><input type="text" placeholder="160000"></td>
+                            <td><input type="text" placeholder="0"></td>
+                            <td><input type="text" placeholder="18000"></td>
+                            <td><input type="text" placeholder="22000"></td>
+                        </tr>
+                        <tr>
+                            <td>토요일</td>
+                            <td><input type="text" placeholder="200000"></td>
+                            <td><input type="text" placeholder="0"></td>
+                            <td><input type="text" placeholder="20000"></td>
+                            <td><input type="text" placeholder="25000"></td>
+                        </tr>
+                        <tr>
+                            <td>일요일</td>
+                            <td><input type="text" placeholder="150000"></td>
+                            <td><input type="text" placeholder="0"></td>
+                            <td><input type="text" placeholder="15000"></td>
+                            <td><input type="text" placeholder="20000"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="closeGroupModal()">취소</button>
+                <button class="btn btn-primary">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 시즌 추가/수정 모달 -->
+    <div id="seasonModal" class="modal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">🌸 시즌 요금 설정</div>
+            
+            <div class="form-group">
+                <label class="form-label">시즌명</label>
+                <input type="text" class="form-input" placeholder="예: 여름 성수기">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label class="form-label">시작일</label>
+                    <input type="date" class="form-input" value="2024-07-20">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">종료일</label>
+                    <input type="date" class="form-input" value="2024-08-15">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">우선순위</label>
+                    <select class="form-input">
+                        <option>낮음</option>
+                        <option>중</option>
+                        <option selected>높음</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="border-top: 2px solid #f0f0f0; margin: 25px 0;"></div>
+
+            <div style="font-weight: 600; font-size: 16px; margin-bottom: 15px;">적용 객실 그룹 및 요금</div>
+
+            <!-- Deluxe 그룹 -->
+            <div style="border: 1px solid #4CAF50; border-radius: 8px; padding: 20px; margin-bottom: 15px; background: #f9fdf9;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <input type="checkbox" checked style="width: 18px; height: 18px;">
+                    <label style="font-weight: 600; font-size: 15px;">🏡 Deluxe 객실 (3개)</label>
+                </div>
+                
+                <table class="price-table">
+                    <thead>
+                        <tr>
+                            <th>요일</th>
+                            <th>객실 기본요금</th>
+                            <th>영유아</th>
+                            <th>아동</th>
+                            <th>성인</th>
+                            <th>할인</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>월~목</td>
+                            <td><input type="text" value="250000"></td>
+                            <td><input type="text" value="0"></td>
+                            <td><input type="text" value="25000"></td>
+                            <td><input type="text" value="30000"></td>
+                            <td><input type="text" value="" placeholder="없음"></td>
+                        </tr>
+                        <tr>
+                            <td>금요일</td>
+                            <td><input type="text" value="300000"></td>
+                            <td><input type="text" value="0"></td>
+                            <td><input type="text" value="28000"></td>
+                            <td><input type="text" value="35000"></td>
+                            <td><input type="text" value="" placeholder="없음"></td>
+                        </tr>
+                        <tr>
+                            <td>토요일</td>
+                            <td><input type="text" value="350000"></td>
+                            <td><input type="text" value="0"></td>
+                            <td><input type="text" value="30000"></td>
+                            <td><input type="text" value="40000"></td>
+                            <td><input type="text" value="" placeholder="없음"></td>
+                        </tr>
+                        <tr>
+                            <td>일요일</td>
+                            <td><input type="text" value="280000"></td>
+                            <td><input type="text" value="0"></td>
+                            <td><input type="text" value="25000"></td>
+                            <td><input type="text" value="30000"></td>
+                            <td><input type="text" value="" placeholder="없음"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <details style="margin-top: 10px;">
+                    <summary style="cursor: pointer; font-size: 13px; color: #666;">객실별 개별 설정</summary>
+                    <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 4px;">
+                        <div style="display: flex; gap: 15px; font-size: 13px;">
+                            <label><input type="checkbox"> 201호: <input type="text" style="width: 80px; padding: 4px;"> 추가</label>
+                            <label><input type="checkbox"> 202호: <input type="text" style="width: 80px; padding: 4px;"> 추가</label>
+                            <label><input type="checkbox"> 203호: <input type="text" style="width: 80px; padding: 4px;"> 할인</label>
+                        </div>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Standard 그룹 -->
+            <div style="border: 1px solid #2196F3; border-radius: 8px; padding: 20px; margin-bottom: 15px; background: #f9fbfd;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <input type="checkbox" checked style="width: 18px; height: 18px;">
+                    <label style="font-weight: 600; font-size: 15px;">🏠 Standard 객실 (4개)</label>
+                </div>
+                
+                <table class="price-table">
+                    <thead>
+                        <tr>
+                            <th>요일</th>
+                            <th>객실 기본요금</th>
+                            <th>영유아</th>
+                            <th>아동</th>
+                            <th>성인</th>
+                            <th>할인</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>월~목</td>
+                            <td><input type="text" value="180000"></td>
+                            <td><input type="text" value="0"></td>
+                            <td><input type="text" value="20000"></td>
+                            <td><input type="text" value="25000"></td>
+                            <td><input type="text" value="" placeholder="없음"></td>
+                        </tr>
+                        <tr>
+                            <td>금요일</td>
+                            <td><input type="text" value="220000"></td>
+                            <td><input type="text" value="0"></td>
+                            <td><input type="text" value="23000"></td>
+                            <td><input type="text" value="28000"></td>
+                            <td><input type="text" value="" placeholder="없음"></td>
+                        </tr>
+                        <tr>
+                            <td>토요일</td>
+                            <td><input type="text" value="260000"></td>
+                            <td><input type="text" value="0"></td>
+                            <td><input type="text" value="25000"></td>
+                            <td><input type="text" value="30000"></td>
+                            <td><input type="text" value="" placeholder="없음"></td>
+                        </tr>
+                        <tr>
+                            <td>일요일</td>
+                            <td><input type="text" value="200000"></td>
+                            <td><input type="text" value="0"></td>
+                            <td><input type="text" value="20000"></td>
+                            <td><input type="text" value="25000"></td>
+                            <td><input type="text" value="" placeholder="없음"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- VIP 그룹 -->
+            <div style="border: 1px solid #9C27B0; border-radius: 8px; padding: 20px; margin-bottom: 15px; background: #fdfafd;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <input type="checkbox" style="width: 18px; height: 18px;">
+                    <label style="font-weight: 600; font-size: 15px;">👑 VIP Suite (1개)</label>
+                </div>
+                
+                <div style="color: #999; font-size: 13px;">이 그룹에는 시즌 요금을 적용하지 않습니다.</div>
+            </div>
+
+            <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                <div style="font-weight: 600; margin-bottom: 10px;">💡 빠른 설정</div>
+                <div style="display: flex; gap: 10px; font-size: 13px;">
+                    <button class="btn btn-secondary btn-sm">각 그룹 기본요금 +50%</button>
+                    <button class="btn btn-secondary btn-sm">다른 시즌 복사...</button>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="closeSeasonModal()">취소</button>
+                <button class="btn btn-primary" onclick="closeSeasonModal()">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 퀵 액션 모달 -->
+    <div id="quickActionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="quickActionTitle">⚡ 퀵 액션</div>
+            
+            <div id="quickActionContent">
+                <!-- 기간 정보 -->
+                <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 8px;">📅 적용 기간</div>
+                    <div id="quickPeriod" style="font-size: 15px; color: #1976d2;">2024년 9월 14일 (토) ~ 9월 18일 (수) · 5일</div>
+                </div>
+
+                <!-- 현재 요금 미리보기 -->
+                <div style="margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 10px;">💰 현재 설정된 요금</div>
+                    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                        <table class="data-table" style="font-size: 13px;">
+                            <thead>
+                                <tr>
+                                    <th>날짜</th>
+                                    <th>Deluxe 201</th>
+                                    <th>Deluxe 202</th>
+                                    <th>Standard 101</th>
+                                    <th>VIP 301</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>9/14(토)</td>
+                                    <td>200,000원</td>
+                                    <td>200,000원</td>
+                                    <td>130,000원</td>
+                                    <td>400,000원</td>
+                                </tr>
+                                <tr>
+                                    <td>9/15(일)</td>
+                                    <td>150,000원</td>
+                                    <td>150,000원</td>
+                                    <td>100,000원</td>
+                                    <td>350,000원</td>
+                                </tr>
+                                <tr>
+                                    <td>9/16(월)</td>
+                                    <td>120,000원</td>
+                                    <td>120,000원</td>
+                                    <td>90,000원</td>
+                                    <td>250,000원</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div style="text-align: center; margin-top: 10px; font-size: 12px; color: #666;">
+                            + 2개 날짜 더보기...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 변경 옵션 -->
+                <div style="border: 2px solid #4CAF50; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 15px; font-size: 15px;">🎯 요금 변경 방식</div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer;" onclick="selectQuickOption('percent')">
+                            <input type="radio" name="quickOption" value="percent" style="width: 18px; height: 18px;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">정률 변경 (%)</div>
+                                <div style="font-size: 12px; color: #666;">현재 요금 기준으로 비율 적용</div>
+                            </div>
+                            <div id="percentInput" style="display: none; align-items: center; gap: 8px;">
+                                <select style="padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                                    <option>할증 (+)</option>
+                                    <option>할인 (-)</option>
+                                </select>
+                                <input type="text" value="20" style="width: 60px; padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 4px; text-align: right;">
+                                <span>%</span>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer;" onclick="selectQuickOption('fixed')">
+                            <input type="radio" name="quickOption" value="fixed" style="width: 18px; height: 18px;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">정액 변경 (원)</div>
+                                <div style="font-size: 12px; color: #666;">현재 요금에서 고정 금액 증감</div>
+                            </div>
+                            <div id="fixedInput" style="display: none; align-items: center; gap: 8px;">
+                                <select style="padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 4px;">
+                                    <option>할증 (+)</option>
+                                    <option>할인 (-)</option>
+                                </select>
+                                <input type="text" value="30000" style="width: 90px; padding: 6px 10px; border: 1px solid #e0e0e0; border-radius: 4px; text-align: right;">
+                                <span>원</span>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer;" onclick="selectQuickOption('absolute')">
+                            <input type="radio" name="quickOption" value="absolute" style="width: 18px; height: 18px;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">고정 금액 설정</div>
+                                <div style="font-size: 12px; color: #666;">그룹별로 동일한 금액 적용</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 고정 금액 입력 (absolute 선택시) -->
+                <div id="absoluteSettings" style="display: none; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 10px;">그룹별 고정 금액</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <label style="font-size: 13px; color: #666;">Deluxe 객실</label>
+                            <input type="text" class="form-input" value="250000">
+                        </div>
+                        <div>
+                            <label style="font-size: 13px; color: #666;">Standard 객실</label>
+                            <input type="text" class="form-input" value="180000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 적용 범위 -->
+                <div style="margin-bottom: 20px;">
+                    <div style="font-weight: 600; margin-bottom: 10px;">🎯 적용 대상</div>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked> 
+                            <span>Deluxe 객실 (3개) - 평균 156,667원</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked> 
+                            <span>Standard 객실 (4개) - 평균 106,667원</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox"> 
+                            <span>VIP Suite (1개) - 평균 333,333원</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 미리보기 -->
+                <div style="background: #e8f5e9; border: 1px solid #4CAF50; border-radius: 8px; padding: 15px;">
+                    <div style="font-weight: 600; margin-bottom: 10px;">📊 변경 후 예상 요금</div>
+                    <div style="font-size: 13px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Deluxe 201 (9/14 토요일)</span>
+                            <span><del style="color: #999;">200,000원</del> → <strong style="color: #c62828;">240,000원 (+20%)</strong></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span>Standard 101 (9/14 토요일)</span>
+                            <span><del style="color: #999;">130,000원</del> → <strong style="color: #c62828;">156,000원 (+20%)</strong></span>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; font-size: 12px; color: #666;">
+                            총 40개 날짜-객실 조합에 적용됩니다
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #fff3e0; padding: 12px; border-radius: 6px; margin-top: 15px; font-size: 13px;">
+                    ⚠️ <strong>수동 설정</strong>으로 저장되어 향후 기본 요금 변경에 영향받지 않습니다.<br>
+                    시즌 종료 후 복원하려면 "기본값 복원" 기능을 사용하세요.
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="closeQuickAction()">취소</button>
+                <button class="btn btn-primary">적용</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editMode = false;
+        let selectedCells = new Set();
+
+        function switchMainTab(tab) {
+            document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            
+            const tabMap = {
+                'overview': 'overviewView',
+                'current': 'currentView',
+                'groups': 'groupsView',
+                'season': 'seasonView',
+                'calendar': 'calendarView',
+                'table': 'tableView',
+                'bulk': 'bulkEdit'
+            };
+            
+            document.getElementById(tabMap[tab]).classList.add('active');
+        }
+
+        function switchTableView(view) {
+            document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (view === 'date') {
+                document.getElementById('dateView').style.display = 'block';
+                document.getElementById('roomView').style.display = 'none';
+            } else {
+                document.getElementById('dateView').style.display = 'none';
+                document.getElementById('roomView').style.display = 'block';
+            }
+        }
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            const bar = document.getElementById('editBar');
+            
+            if (editMode) {
+                bar.classList.add('show');
+                event.target.textContent = '편집 완료';
+                event.target.classList.remove('btn-primary');
+                event.target.classList.add('btn-secondary');
+            } else {
+                bar.classList.remove('show');
+                event.target.textContent = '편집 모드';
+                event.target.classList.remove('btn-secondary');
+                event.target.classList.add('btn-primary');
+                clearSelection();
+            }
+        }
+
+        function selectCell(cell) {
+            if (!editMode) return;
+
+            if (selectedCells.has(cell)) {
+                selectedCells.delete(cell);
+                cell.classList.remove('selected');
+            } else {
+                selectedCells.add(cell);
+                cell.classList.add('selected');
+            }
+
+            document.getElementById('selectedCount').textContent = selectedCells.size;
+        }
+
+        function clearSelection() {
+            selectedCells.forEach(cell => cell.classList.remove('selected'));
+            selectedCells.clear();
+            document.getElementById('selectedCount').textContent = '0';
+        }
+
+        function cancelEdit() {
+            toggleEditMode();
+        }
+
+        function showGroupModal() {
+            document.getElementById('groupModal').classList.add('show');
+        }
+
+        function closeGroupModal() {
+            document.getElementById('groupModal').classList.remove('show');
+        }
+
+        function showSeasonModal() {
+            document.getElementById('seasonModal').classList.add('show');
+        }
+
+        function closeSeasonModal() {
+            document.getElementById('seasonModal').classList.remove('show');
+        }
+
+        function showQuickAction(type) {
+            const modal = document.getElementById('quickActionModal');
+            const title = document.getElementById('quickActionTitle');
+            const period = document.getElementById('quickPeriod');
+            
+            const configs = {
+                'chuseok': {
+                    title: '🌕 추석 연휴 요금 설정',
+                    period: '2024년 9월 14일 (토) ~ 9월 18일 (수) · 5일'
+                },
+                'christmas': {
+                    title: '🎄 크리스마스 특별 요금',
+                    period: '2024년 12월 23일 (월) ~ 12월 25일 (수) · 3일'
+                },
+                'newyear': {
+                    title: '🎊 연말연시 요금 설정',
+                    period: '2024년 12월 30일 (월) ~ 2025년 1월 2일 (목) · 4일'
+                },
+                'weekend': {
+                    title: '📅 이번 주말 긴급 변경',
+                    period: '이번 주 토요일 ~ 일요일 · 2일'
+                },
+                'custom': {
+                    title: '✨ 커스텀 기간 설정',
+                    period: '직접 날짜를 선택하세요'
+                },
+                'holiday': {
+                    title: '🎌 공휴일 일괄 적용',
+                    period: '남은 공휴일 7개 (총 21일)'
+                }
+            };
+            
+            const config = configs[type];
+            title.textContent = config.title;
+            period.textContent = config.period;
+            
+            modal.classList.add('show');
+        }
+
+        function closeQuickAction() {
+            document.getElementById('quickActionModal').classList.remove('show');
+        }
+
+        function selectQuickOption(type) {
+            document.getElementById('percentInput').style.display = 'none';
+            document.getElementById('fixedInput').style.display = 'none';
+            document.getElementById('absoluteSettings').style.display = 'none';
+            
+            if (type === 'percent') {
+                document.getElementById('percentInput').style.display = 'flex';
+            } else if (type === 'fixed') {
+                document.getElementById('fixedInput').style.display = 'flex';
+            } else if (type === 'absolute') {
+                document.getElementById('absoluteSettings').style.display = 'block';
+            }
+        }
+
+        function switchCurrentView(view) {
+            const calendar = document.getElementById('currentCalendar');
+            const table = document.getElementById('currentTable');
+
+            if (view === 'calendar') {
+                calendar.style.display = 'block';
+                table.style.display = 'none';
+            } else {
+                calendar.style.display = 'none';
+                table.style.display = 'block';
+            }
+        }
+
+        // K 표기를 원화로 변환하는 함수
+        function convertKToWon() {
+            const allElements = document.querySelectorAll('*');
+            allElements.forEach(element => {
+                if (element.children.length === 0) { // 텍스트 노드만 처리
+                    const text = element.textContent;
+                    if (/\d+(\.\d+)?K/.test(text)) {
+                        element.textContent = text.replace(/(\d+(?:\.\d+)?)K/g, (match, num) => {
+                            const amount = parseFloat(num) * 1000;
+                            return amount.toLocaleString('ko-KR') + '원';
+                        });
+                    }
+                }
+            });
+        }
+
+        // 페이지 로드 시 변환 실행
+        window.addEventListener('DOMContentLoaded', convertKToWon);
+    </script>
+</body>
+</html>
